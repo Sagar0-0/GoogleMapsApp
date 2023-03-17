@@ -14,9 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GoogleMapsApp"
         tools:targetApi="31">
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyD3jSWT4JJGJD0by4aYxJqJmJxYMFNBaJQ" />
+            android:value="@string/MAPS_API_KEY" />
 
         <activity
             android:name=".MainActivity"

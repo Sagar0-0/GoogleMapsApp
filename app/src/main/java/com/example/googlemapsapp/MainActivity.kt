@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
     private val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1234
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Places.initialize(applicationContext, "AIzaSyD3jSWT4JJGJD0by4aYxJqJmJxYMFNBaJQ")
+        Places.initialize(applicationContext, getString(R.string.MAPS_API_KEY))
 
         setContent {
             GoogleMapsAppTheme {

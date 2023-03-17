@@ -4,6 +4,9 @@ plugins {
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
 }
 
+def localProperties = new Properties()
+localProperties.load(new FileInputStream(rootProject.file("local.properties")))
+
 android {
     namespace 'com.example.googlemapsapp'
     compileSdk 33
@@ -21,7 +24,12 @@ android {
         }
     }
 
+
     buildTypes {
+        debug {
+            resValue("string", "MAPS_API_KEY", localProperties["MAPS_API_KEY"])
+        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
