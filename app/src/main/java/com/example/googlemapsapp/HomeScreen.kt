@@ -19,7 +19,6 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.libraries.places.api.Places
 import com.google.maps.android.compose.*
 
@@ -35,12 +34,17 @@ fun HomeScreen() {
     val placesClient = Places.createClient(context)
     val fusedLocationProviderClient =
         remember { LocationServices.getFusedLocationProviderClient(context) }
-    var lastKnownLocation: Location? = null
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(0.0, 0.0), 14f)
+
+    var lastKnownLocation by remember {
+        mutableStateOf<Location?>(null)
     }
-    val deviceLocation = remember {
+
+    var deviceLatLng by remember {
         mutableStateOf(LatLng(0.0, 0.0))
+    }
+
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(deviceLatLng,14f)
     }
 
     try {
@@ -49,12 +53,8 @@ fun HomeScreen() {
             if (task.isSuccessful) {
                 // Set the map's camera position to the current location of the device.
                 lastKnownLocation = task.result
-                if (lastKnownLocation != null) {
-                    deviceLocation.value=LatLng(
-                        lastKnownLocation!!.latitude,
-                        lastKnownLocation!!.longitude
-                    )
-                }
+                deviceLatLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(deviceLatLng, 14f)
             } else {
                 Log.d(TAG, "Current location is null. Using defaults.")
                 Log.e(TAG, "Exception: %s", task.exception)
@@ -63,6 +63,7 @@ fun HomeScreen() {
     } catch (e: SecurityException) {
         Log.e("Exception: %s", e.message, e)
     }
+
 
     val mapUiSettings by remember {
         mutableStateOf(
@@ -77,7 +78,7 @@ fun HomeScreen() {
         ) {
             MarkerInfoWindowContent(
                 state = MarkerState(
-                    position = deviceLocation.value
+                    position = deviceLatLng
                 )
             ) { marker ->
                 Text(marker.title ?: "You", color = Color.Red)
