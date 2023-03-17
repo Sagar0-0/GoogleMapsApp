@@ -44,7 +44,7 @@ fun HomeScreen() {
     }
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(deviceLatLng,14f)
+        position = CameraPosition.fromLatLngZoom(deviceLatLng, 14f)
     }
 
     try {
