@@ -65,15 +65,8 @@ fun HomeScreen() {
     }
 
 
-    val mapUiSettings by remember {
-        mutableStateOf(
-            MapUiSettings(mapToolbarEnabled = false)
-        )
-    }
-
     Box(Modifier.fillMaxSize()) {
         GoogleMap(
-            uiSettings = mapUiSettings,
             cameraPositionState = cameraPositionState
         ) {
             MarkerInfoWindowContent(
@@ -86,28 +79,4 @@ fun HomeScreen() {
         }
     }
 
-}
-
-/**
- * Prompts the user for permission to use the device location.
- */
-private fun getLocationPermission(context: Context) {
-    /*
-     * Request location permission, so that we can get the location of the
-     * device. The result of the permission request is handled by a callback,
-     * onRequestPermissionsResult.
-     */
-    if (ContextCompat.checkSelfPermission(
-            (context as MainActivity).applicationContext,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-        == PackageManager.PERMISSION_GRANTED
-    ) {
-        locationPermissionGranted.value = true
-    } else {
-        ActivityCompat.requestPermissions(
-            context as MainActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
-        )
-    }
 }
