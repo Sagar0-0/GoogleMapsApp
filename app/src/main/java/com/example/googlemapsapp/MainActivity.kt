@@ -7,7 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.Text
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.input.pointer.PointerIconDefaults.Text
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.libraries.places.api.Places
@@ -26,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             getLocationPermission()
             if (locationPermissionGranted.value) {
-                HomeScreen()
+                AddressesScreen()
             }else{
                 Text("Need permission")
             }
