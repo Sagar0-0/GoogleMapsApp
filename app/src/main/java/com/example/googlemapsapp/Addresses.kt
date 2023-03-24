@@ -1,6 +1,7 @@
 package com.example.googlemapsapp
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,10 +9,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,9 +21,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.libraries.places.api.model.Place
 
 @Composable
-fun AddressesScreen() {
+fun AddressesScreen(place: Place?) {
     Column(Modifier.fillMaxSize()) {
 
         TopAppBar(
@@ -40,7 +39,7 @@ fun AddressesScreen() {
             Text(text = "Addresses", fontSize = 24.sp, modifier = Modifier.weight(1f))
         }
 
-        SearchBar()
+        SearchBar(place = place)
 
         Row(
             Modifier
@@ -120,7 +119,17 @@ fun AddressesScreen() {
             fontWeight = FontWeight.Bold
         )
         LazyColumn {
-
+            items(4){
+                AddressItem(
+                    icon = Icons.Default.Home,
+                    name = "Home",
+                    address = "72/3  Chandani Chownk Ghar number 123/123, Shiv Road, Shankar Shah Colony, Ambedon, Pune, Maharashtra 411046, India",
+                    contactNo = "1234567890",
+                    onClick = { /*TODO*/ },
+                    onEditClick = { /*TODO*/ },
+                    onDeleteClick = { /*TODO*/ }) {
+                }
+            }
         }
     }
 }
@@ -136,5 +145,24 @@ fun AddressItem(
     onDeleteClick: () -> Unit,
     onShareClick: () -> Unit
 ) {
+    Row(
+        Modifier
+            .clickable { onClick() }
+            .fillMaxWidth()
+            .padding(10.dp)) {
+        Icon(modifier = Modifier.padding(end = 4.dp),imageVector = icon, contentDescription = "")
+        Column(Modifier.fillMaxWidth()) {
+            Text(text = name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = address, modifier = Modifier.padding(vertical = 5.dp))
+            Text(text = "Phone number: $contactNo", Modifier.padding(bottom = 5.dp))
+            Row(Modifier.fillMaxWidth()) {
+                Text(text = "Edit", color = Color.Green, modifier = Modifier.clickable { onEditClick() })
+                Text(text = "Delete", color = Color.Green, modifier = Modifier
+                    .padding(horizontal = 8.dp)
+                    .clickable { onDeleteClick() })
+                Text(text = "Share", color = Color.Green, modifier = Modifier.clickable { onShareClick() })
 
+            }
+        }
+    }
 }

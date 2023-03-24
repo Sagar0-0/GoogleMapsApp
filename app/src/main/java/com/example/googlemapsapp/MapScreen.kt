@@ -7,13 +7,13 @@ import android.location.Location
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.model.Place
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -38,7 +39,7 @@ import java.util.*
 @OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun MapScreen() {
+fun MapScreen(place: Place?) {
     val context = LocalContext.current
 //    val placesClient = Places.createClient(context)
 //
@@ -66,7 +67,7 @@ fun MapScreen() {
     }
 
     var deviceLatLng by remember {
-        mutableStateOf(LatLng(0.0, 0.0))
+        mutableStateOf(if(place!=null)place.latLng else LatLng(0.0, 0.0))
     }
 
     val cameraPositionState = rememberCameraPositionState {
@@ -146,10 +147,28 @@ fun MapScreen() {
 //        }
 //    }
 
+    var bottomSheetValue by rememberSaveable {
+        mutableStateOf(BottomSheetValue.Collapsed)
+    }
+
     val sheetState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+        bottomSheetState = BottomSheetState(initialValue = bottomSheetValue)
     )
     val scope = rememberCoroutineScope()
+    val openSheet = {
+        bottomSheetValue = BottomSheetValue.Expanded
+        scope.launch {
+            sheetState.bottomSheetState.expand()
+        }
+    }
+
+    val closeSheet = {
+        bottomSheetValue = BottomSheetValue.Collapsed
+        scope.launch {
+            sheetState.bottomSheetState.collapse()
+        }
+    }
+
     BottomSheetScaffold(
         sheetElevation = 10.dp,
         sheetGesturesEnabled = false,
@@ -157,15 +176,16 @@ fun MapScreen() {
         topBar = {
             MapHeader()
         },
-        sheetShape = RoundedCornerShape(20.dp),
+        sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         sheetPeekHeight = 150.dp,
         sheetBackgroundColor = if (sheetState.bottomSheetState.isCollapsed) Color.Transparent else Color.Black.copy(
             0.2f
         ),
         sheetContent = {
-            MyBottomSheet(sheetScaffoldState = sheetState,"$cityName , $stateName") {
-                scope.launch { sheetState.bottomSheetState.expand() }
-            }
+            MyBottomSheet(sheetScaffoldState = sheetState,
+                if (place != null) place.name else "$cityName , $stateName",
+                onButtonClick = { openSheet() },
+                onCollapse = { closeSheet() })
         }) { padding ->
 
         Box(
@@ -184,7 +204,7 @@ fun MapScreen() {
                     Text(marker.title ?: "You", color = Color.Red)
                 }
             }
-            SearchBar()
+            SearchBar(place)
         }
     }
 }
@@ -192,80 +212,73 @@ fun MapScreen() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun MyBottomSheet(sheetScaffoldState: BottomSheetScaffoldState,locationName: String, onButtonClick: () -> Unit) {
-    if (sheetScaffoldState.bottomSheetState.isCollapsed) {
-        Column(
-            modifier = Modifier
-                .heightIn(min = 150.dp, max = 500.dp)
-                .fillMaxSize()
-                .background(Color.DarkGray)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                Modifier
-                    .padding(vertical = 20.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .padding(end = 5.dp)
-                        .size(30.dp),
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Location",
-                    tint = Color.Red
-                )
-                Text(
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    text = locationName,
-                    fontSize = 24.sp,
-                    textAlign = TextAlign.Center,
-                    color = Color.Black
-                )
-            }
-            Button(
+fun MyBottomSheet(
+    sheetScaffoldState: BottomSheetScaffoldState,
+    locationName: String,
+    onButtonClick: () -> Unit,
+    onCollapse: () -> Unit,
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .heightIn(min = 150.dp, max = 450.dp)
+    ) {
+        if (sheetScaffoldState.bottomSheetState.isCollapsed) {
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(15.dp)),
-                onClick = {
-                    onButtonClick()
-                }) {
-                Text(
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(10.dp),
-                    text = "Enter complete address",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    textAlign = TextAlign.Center
-                )
+                    .background(Color.DarkGray)
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                item {
+                    Row(
+                        Modifier
+                            .padding(vertical = 20.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            modifier = Modifier
+                                .padding(end = 5.dp)
+                                .size(30.dp),
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = "Location",
+                            tint = Color.Red
+                        )
+                        Text(
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            text = locationName,
+                            fontSize = 24.sp,
+                            textAlign = TextAlign.Center,
+                            color = Color.Black
+                        )
+                    }
+                }
+                item {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(15.dp)),
+                        onClick = onButtonClick
+                    ) {
+                        Text(
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(10.dp),
+                            text = "Enter complete address",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
+        } else {
+            AddressDetailsScreen(onClick = onCollapse)
         }
-    } else {
-        AddressDetailsScreen()
-    }
-}
-
-@Composable
-fun AddressDetailsScreen() {
-    Text(text = "Enter Address Details...")
-}
-
-@Composable
-fun MapHeader() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            modifier = Modifier.padding(15.dp),
-            imageVector = Icons.Default.ArrowBack,
-            contentDescription = ""
-        )
-        Spacer(modifier = Modifier.width(20.dp))
-        Text(text = "Choose Location", fontSize = 24.sp, modifier = Modifier.weight(1f))
     }
 }

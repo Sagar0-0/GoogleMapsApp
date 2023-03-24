@@ -9,3 +9,4 @@ const val KEY_LOCATION = "location"
 
 // Used for selecting the current place.
 const val M_MAX_ENTRIES = 5
+const val AUTOCOMPLETE_REQUEST_CODE = 112345678
