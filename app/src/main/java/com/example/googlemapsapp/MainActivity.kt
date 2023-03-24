@@ -19,7 +19,6 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.AutocompleteActivity
 
-
 class MainActivity : ComponentActivity() {
     companion object {
         const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1234
@@ -34,13 +33,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             getLocationPermission()
             if (locationPermissionGranted.value) {
-                AddressesScreen(place.value)
+                MapScreen(place.value)
             }else{
                 Text("Need permission")
             }
         }
     }
-
 
     @Deprecated("Deprecated in Java")
     override fun onRequestPermissionsResult(
@@ -76,7 +74,7 @@ class MainActivity : ComponentActivity() {
                 Activity.RESULT_OK -> {
                     data?.let {
                         place.value = Autocomplete.getPlaceFromIntent(data)
-                        Log.i(TAG, "Place: ${place.value!!.name}, ${place.value!!.id}")
+                        //trigger recomposition
                     }
                 }
                 Activity.RESULT_CANCELED -> {

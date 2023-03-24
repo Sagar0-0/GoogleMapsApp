@@ -12,6 +12,7 @@ import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +33,7 @@ fun SearchBar(place: Place?) {
     val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
         .build(context)
 
-    val searchQuery by remember {
+    val searchQuery by rememberSaveable {
         mutableStateOf(if(place!=null) place.name else "")
     }
     OutlinedTextField(

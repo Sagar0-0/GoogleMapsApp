@@ -41,24 +41,6 @@ import java.util.*
 @Composable
 fun MapScreen(place: Place?) {
     val context = LocalContext.current
-//    val placesClient = Places.createClient(context)
-//
-//    var likelyPlaceNames by remember {
-//        mutableStateOf<Array<String?>>(arrayOfNulls(0))
-//    }
-//    var likelyPlaceAddresses by remember {
-//        mutableStateOf<Array<String?>>(arrayOfNulls(0))
-//    }
-//    var likelyPlaceAttributions by remember {
-//        mutableStateOf<Array<List<*>?>>(arrayOfNulls(0))
-//    }
-//    var likelyPlaceLatLngs by remember {
-//        mutableStateOf<Array<LatLng?>>(arrayOfNulls(0))
-//    }
-//    var count by remember {
-//        mutableStateOf(0)
-//    }
-
     val fusedLocationProviderClient =
         remember { LocationServices.getFusedLocationProviderClient(context) }
 
@@ -67,7 +49,7 @@ fun MapScreen(place: Place?) {
     }
 
     var deviceLatLng by remember {
-        mutableStateOf(if(place!=null)place.latLng else LatLng(0.0, 0.0))
+        mutableStateOf(if (place != null) place.latLng else LatLng(0.0, 0.0))
     }
 
     val cameraPositionState = rememberCameraPositionState {
@@ -81,71 +63,36 @@ fun MapScreen(place: Place?) {
         mutableStateOf("")
     }
 
-    val locationResult = fusedLocationProviderClient.lastLocation
-    locationResult.addOnCompleteListener(context as MainActivity) { task ->
-        if (task.isSuccessful) {
-            // Set the map's camera position to the current location of the device.
-            lastKnownLocation = task.result
-            val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(
-                lastKnownLocation!!.latitude,
-                lastKnownLocation!!.longitude,
-                1
-            )
+    val getCurrentLocation: () -> Unit = {
+        val locationResult = fusedLocationProviderClient.lastLocation
+        locationResult.addOnCompleteListener(context as MainActivity) { task ->
+            if (task.isSuccessful) {
+                // Set the map's camera position to the current location of the device.
+                lastKnownLocation = task.result
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(
+                    lastKnownLocation!!.latitude,
+                    lastKnownLocation!!.longitude,
+                    1
+                )
 
-            if (addresses != null && addresses.isNotEmpty()) {
-                val address = addresses[0]
-                cityName = address.locality
-                stateName = address.adminArea
+                if (addresses != null && addresses.isNotEmpty()) {
+                    val address = addresses[0]
+                    cityName = address.locality
+                    stateName = address.adminArea
+                }
+                deviceLatLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(deviceLatLng, 18f)
+            } else {
+                Log.d(TAG, "Current location is null. Using defaults.")
+                Log.e(TAG, "Exception: %s", task.exception)
             }
-            deviceLatLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(deviceLatLng, 18f)
-        } else {
-            Log.d(TAG, "Current location is null. Using defaults.")
-            Log.e(TAG, "Exception: %s", task.exception)
         }
     }
 
-    // Use fields to define the data types to return.
-//    val placeFields = listOf(Place.Field.NAME, Place.Field.ADDRESS, Place.Field.LAT_LNG)
-//
-//    // Use the builder to create a FindCurrentPlaceRequest.
-//    val request = FindCurrentPlaceRequest.newInstance(placeFields)
-//
-//    // Get the likely places - that is, the businesses and other points of interest that
-//    // are the best match for the device's current location.
-//    val placeResult = placesClient.findCurrentPlace(request)
-//    placeResult.addOnCompleteListener { task ->
-//        if (task.isSuccessful && task.result != null) {
-//            val likelyPlaces = task.result
-//
-//            // Set the count, handling cases where less than 5 entries are returned.
-//            count =
-//                if (likelyPlaces != null && likelyPlaces.placeLikelihoods.size < M_MAX_ENTRIES) {
-//                    likelyPlaces.placeLikelihoods.size
-//                } else {
-//                    M_MAX_ENTRIES
-//                }
-//            var i = 0
-//            likelyPlaceNames = arrayOfNulls(count)
-//            likelyPlaceAddresses = arrayOfNulls(count)
-//            likelyPlaceAttributions = arrayOfNulls<List<*>?>(count)
-//            likelyPlaceLatLngs = arrayOfNulls(count)
-//            for (placeLikelihood in likelyPlaces?.placeLikelihoods ?: emptyList()) {
-//                // Build a list of likely places to show the user.
-//                likelyPlaceNames[i] = placeLikelihood.place.name
-//                likelyPlaceAddresses[i] = placeLikelihood.place.address
-//                likelyPlaceAttributions[i] = placeLikelihood.place.attributions
-//                likelyPlaceLatLngs[i] = placeLikelihood.place.latLng
-//                i++
-//                if (i > count - 1) {
-//                    break
-//                }
-//            }
-//        } else {
-//            Log.e(TAG, "Exception: %s", task.exception)
-//        }
-//    }
+    if (deviceLatLng.latitude == 0.0 && deviceLatLng.latitude == 0.0) {
+        getCurrentLocation()
+    }
 
     var bottomSheetValue by rememberSaveable {
         mutableStateOf(BottomSheetValue.Collapsed)
@@ -176,14 +123,13 @@ fun MapScreen(place: Place?) {
         topBar = {
             MapHeader()
         },
-        sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         sheetPeekHeight = 150.dp,
         sheetBackgroundColor = if (sheetState.bottomSheetState.isCollapsed) Color.Transparent else Color.Black.copy(
             0.2f
         ),
         sheetContent = {
             MyBottomSheet(sheetScaffoldState = sheetState,
-                if (place != null) place.name else "$cityName , $stateName",
+                if (place != null) place!!.name else "$cityName , $stateName",
                 onButtonClick = { openSheet() },
                 onCollapse = { closeSheet() })
         }) { padding ->
@@ -221,12 +167,11 @@ fun MyBottomSheet(
     Box(
         Modifier
             .fillMaxSize()
-            .heightIn(min = 150.dp, max = 450.dp)
     ) {
         if (sheetScaffoldState.bottomSheetState.isCollapsed) {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(Color.DarkGray)
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.Top,
@@ -277,6 +222,7 @@ fun MyBottomSheet(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
+
         } else {
             AddressDetailsScreen(onClick = onCollapse)
         }
