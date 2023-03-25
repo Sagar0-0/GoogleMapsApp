@@ -76,7 +76,8 @@ fun MapScreen() {
 
                 if (addresses != null && addresses.isNotEmpty()) {
                     val address = addresses[0]
-                    bottomSheetText = "${address.featureName}, ${address.subLocality}, ${address.locality}, ${address.adminArea}"
+                    bottomSheetText =
+                        "${address.featureName}, ${address.subLocality}, ${address.locality}, ${address.adminArea}"
                 }
                 markerLatLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(markerLatLng, 18f)
@@ -148,10 +149,10 @@ fun MapScreen() {
 
                     if (addresses != null && addresses.isNotEmpty()) {
                         val address = addresses[0]
-                        bottomSheetText = "${address.featureName}, ${address.subLocality}, ${address.locality}, ${address.adminArea}"
+                        bottomSheetText =
+                            "${address.featureName}, ${address.subLocality}, ${address.locality}, ${address.adminArea}"
                     }
                     markerLatLng = it
-                    cameraPositionState.position = CameraPosition.fromLatLngZoom(markerLatLng, 18f)
                 }
             ) {
                 MarkerInfoWindowContent(
@@ -172,8 +173,8 @@ fun MapScreen() {
             Text(
                 modifier = Modifier
                     .padding(10.dp)
-                    .clickable { getCurrentLocation() }
                     .clip(RoundedCornerShape(20.dp))
+                    .clickable { getCurrentLocation() }
                     .background(Color.Red)
                     .padding(10.dp)
                     .align(Alignment.BottomCenter),
@@ -235,6 +236,7 @@ fun MyBottomSheet(
                 item {
                     Button(
                         modifier = Modifier
+                            .padding(bottom = 16.dp)
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(15.dp)),
                         onClick = onButtonClick
@@ -249,12 +251,11 @@ fun MyBottomSheet(
                             textAlign = TextAlign.Center
                         )
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
 
         } else {
-            AddressDetailsScreen(onClick = onCollapse)
+            FillAddressDetails(onClick = onCollapse, locationName = locationName)
         }
     }
 }

@@ -1,23 +1,15 @@
 package com.example.googlemapsapp
 
 import android.Manifest
-import android.app.Activity
-import android.content.ContentValues.TAG
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.googlemapsapp.utils.AUTOCOMPLETE_REQUEST_CODE
 import com.google.android.libraries.places.api.Places
-import com.google.android.libraries.places.api.model.Place
-import com.google.android.libraries.places.widget.Autocomplete
-import com.google.android.libraries.places.widget.AutocompleteActivity
 
 class MainActivity : ComponentActivity() {
     companion object {
