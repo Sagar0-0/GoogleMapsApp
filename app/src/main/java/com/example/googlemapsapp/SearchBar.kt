@@ -1,5 +1,8 @@
 package com.example.googlemapsapp
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,7 +28,7 @@ import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 
 @Composable
-fun SearchBar(place: Place?) {
+fun SearchBar(getPlace: (Place)->Unit) {
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
     val fields = listOf(Place.Field.ID, Place.Field.NAME,Place.Field.ADDRESS,Place.Field.LAT_LNG)
@@ -33,10 +36,26 @@ fun SearchBar(place: Place?) {
     val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
         .build(context)
 
-    val searchQuery by rememberSaveable {
-        mutableStateOf(if(place!=null) place.name else "")
+    var searchQuery by rememberSaveable {
+        mutableStateOf("")
     }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // Handle the activity result here
+            result.data?.let {
+                val place = Autocomplete.getPlaceFromIntent(it)
+                getPlace(place)
+                searchQuery = place.name as String
+            }
+        }
+    }
+
+
     OutlinedTextField(
+        maxLines = 1,
+        singleLine = true,
         readOnly = false,
         shape = RoundedCornerShape(15.dp),
         modifier = Modifier
@@ -52,7 +71,8 @@ fun SearchBar(place: Place?) {
                 LaunchedEffect(interactionSource) {
                     interactionSource.interactions.collect {
                         if (it is PressInteraction.Release) {
-                            (context as MainActivity).startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE)
+                            launcher.launch(intent)
+//                            (context as MainActivity).startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE)
                             focusManager.clearFocus()
                         }
                     }

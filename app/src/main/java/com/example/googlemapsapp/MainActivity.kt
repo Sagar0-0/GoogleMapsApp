@@ -25,7 +25,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private val locationPermissionGranted = mutableStateOf(false)
-    private val place = mutableStateOf<Place?>(null)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Places.initialize(applicationContext, getString(R.string.MAPS_API_KEY))
@@ -33,7 +32,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             getLocationPermission()
             if (locationPermissionGranted.value) {
-                MapScreen(place.value)
+                MapScreen()
             }else{
                 Text("Need permission")
             }
@@ -66,24 +65,6 @@ class MainActivity : ComponentActivity() {
                 PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
             )
         }
-    }
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
-            when (resultCode) {
-                Activity.RESULT_OK -> {
-                    data?.let {
-                        place.value = Autocomplete.getPlaceFromIntent(data)
-                        //trigger recomposition
-                    }
-                }
-                Activity.RESULT_CANCELED -> {
-                    // The user canceled the operation.
-                }
-            }
-            return
-        }
-        super.onActivityResult(requestCode, resultCode, data)
     }
 
 }

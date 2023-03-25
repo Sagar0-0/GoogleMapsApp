@@ -6,6 +6,7 @@ import android.location.Geocoder
 import android.location.Location
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,7 +28,6 @@ import androidx.compose.ui.unit.sp
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.libraries.places.api.model.Place
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -39,7 +39,7 @@ import java.util.*
 @OptIn(ExperimentalMaterialApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun MapScreen(place: Place?) {
+fun MapScreen() {
     val context = LocalContext.current
     val fusedLocationProviderClient =
         remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -48,18 +48,16 @@ fun MapScreen(place: Place?) {
         mutableStateOf<Location?>(null)
     }
 
-    var deviceLatLng by remember {
-        mutableStateOf(if (place != null) place.latLng else LatLng(0.0, 0.0))
+    var markerLatLng by remember {
+        mutableStateOf(LatLng(0.0, 0.0))
     }
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(deviceLatLng, 18f)
+        position = CameraPosition.fromLatLngZoom(markerLatLng, 18f)
     }
 
-    var cityName by remember {
-        mutableStateOf("")
-    }
-    var stateName by remember {
+
+    var bottomSheetText by remember {
         mutableStateOf("")
     }
 
@@ -78,11 +76,10 @@ fun MapScreen(place: Place?) {
 
                 if (addresses != null && addresses.isNotEmpty()) {
                     val address = addresses[0]
-                    cityName = address.locality
-                    stateName = address.adminArea
+                    bottomSheetText = "${address.featureName}, ${address.subLocality}, ${address.locality}, ${address.adminArea}"
                 }
-                deviceLatLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(deviceLatLng, 18f)
+                markerLatLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(markerLatLng, 18f)
             } else {
                 Log.d(TAG, "Current location is null. Using defaults.")
                 Log.e(TAG, "Exception: %s", task.exception)
@@ -90,7 +87,7 @@ fun MapScreen(place: Place?) {
         }
     }
 
-    if (deviceLatLng.latitude == 0.0 && deviceLatLng.latitude == 0.0) {
+    if (markerLatLng.latitude == 0.0 && markerLatLng.latitude == 0.0) {
         getCurrentLocation()
     }
 
@@ -129,7 +126,7 @@ fun MapScreen(place: Place?) {
         ),
         sheetContent = {
             MyBottomSheet(sheetScaffoldState = sheetState,
-                if (place != null) place!!.name else "$cityName , $stateName",
+                bottomSheetText,
                 onButtonClick = { openSheet() },
                 onCollapse = { closeSheet() })
         }) { padding ->
@@ -140,17 +137,50 @@ fun MapScreen(place: Place?) {
                 .padding(bottom = padding.calculateBottomPadding())
         ) {
             GoogleMap(
-                cameraPositionState = cameraPositionState
+                cameraPositionState = cameraPositionState,
+                onMapLongClick = {
+                    val geocoder = Geocoder(context, Locale.getDefault())
+                    val addresses = geocoder.getFromLocation(
+                        it.latitude,
+                        it.longitude,
+                        1
+                    )
+
+                    if (addresses != null && addresses.isNotEmpty()) {
+                        val address = addresses[0]
+                        bottomSheetText = "${address.featureName}, ${address.subLocality}, ${address.locality}, ${address.adminArea}"
+                    }
+                    markerLatLng = it
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(markerLatLng, 18f)
+                }
             ) {
                 MarkerInfoWindowContent(
                     state = MarkerState(
-                        position = deviceLatLng
+                        position = markerLatLng
                     )
                 ) { marker ->
                     Text(marker.title ?: "You", color = Color.Red)
                 }
             }
-            SearchBar(place)
+
+            SearchBar {
+                bottomSheetText = it.name as String
+                markerLatLng = it.latLng as LatLng
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(markerLatLng, 18f)
+            }
+
+            Text(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clickable { getCurrentLocation() }
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.Red)
+                    .padding(10.dp)
+                    .align(Alignment.BottomCenter),
+                text = "Use current Location",
+                color = Color.Black,
+                fontSize = 18.sp
+            )
         }
     }
 }

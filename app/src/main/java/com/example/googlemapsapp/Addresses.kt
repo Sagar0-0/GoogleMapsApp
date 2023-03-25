@@ -39,7 +39,9 @@ fun AddressesScreen(place: Place?) {
             Text(text = "Addresses", fontSize = 24.sp, modifier = Modifier.weight(1f))
         }
 
-        SearchBar(place = place)
+        SearchBar{
+
+        }
 
         Row(
             Modifier
